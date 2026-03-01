@@ -170,7 +170,7 @@ class ApiService {
   // ✅ ✅ ADDED 🔥 STOCK UPDATE API (NO CHANGES ELSEWHERE)
   Future<MenuItem> updateStock(String id, int stock) async {
     final response = await http.patch(
-      Uri.parse('${ApiConfig.baseUrl}/menu/$id/stock'),
+      Uri.parse('${ApiConfig.baseUrl}${ApiConfig.menuItems}/$id/stock'),
       headers: await _headers(),
       body: jsonEncode({'stock': stock}),
     );
