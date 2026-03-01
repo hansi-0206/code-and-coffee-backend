@@ -21,7 +21,7 @@ class MenuProvider with ChangeNotifier {
 
   void _initSocket() {
     socket = IO.io(
-      _apiService.baseUrl,
+      "https://code-and-coffee-backend.onrender.com",
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .enableAutoConnect()
@@ -32,7 +32,6 @@ class MenuProvider with ChangeNotifier {
       print("✅ Socket Connected");
     });
 
-    // ✅ REALTIME STOCK UPDATE 🔥
     socket.on("stockUpdated", (data) {
       final menuItemId = data['menuItemId'];
       final newStock = data['newStock'];

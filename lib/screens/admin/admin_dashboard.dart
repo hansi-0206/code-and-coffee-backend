@@ -1,3 +1,5 @@
+// FULL FILE — COPY PASTE
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -228,6 +230,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             DataColumn(label: Text('Item')),
             DataColumn(label: Text('Category')),
             DataColumn(label: Text('Price')),
+            DataColumn(label: Text('Stock')),
             DataColumn(label: Text('Status')),
             DataColumn(label: Text('Actions')),
           ],
@@ -236,6 +239,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               DataCell(Text(item.name)),
               DataCell(Text(item.category)),
               DataCell(Text('₹${item.price.toStringAsFixed(0)}')),
+              DataCell(Text(item.stock.toString())),
               DataCell(Text(item.available ? 'Available' : 'Unavailable')),
               DataCell(Row(
                 children: [
@@ -243,12 +247,47 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     icon: const Icon(Icons.edit),
                     onPressed: () => _openMenuDialog(context, item: item),
                   ),
+
+                  // 🔥 STOCK UPDATE BUTTON
                   IconButton(
-                    icon: Icon(item.available ? Icons.close : Icons.check),
-                    onPressed: () {
-                      menuProvider.updateMenuItem(
-                        item.id,
-                        {'available': !item.available},
+                    icon: const Icon(Icons.inventory),
+                    onPressed: () async {
+                      final stockController = TextEditingController(
+                        text: item.stock.toString(),
+                      );
+
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text("Update Stock"),
+                          content: TextField(
+                            controller: stockController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Stock Quantity",
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("Cancel"),
+                            ),
+                            ElevatedButton(
+                              child: const Text("Update"),
+                              onPressed: () async {
+                                final newStock =
+                                    int.tryParse(stockController.text) ?? 0;
+
+                                await menuProvider.updateStock(
+                                  item.id,
+                                  newStock,
+                                );
+
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),

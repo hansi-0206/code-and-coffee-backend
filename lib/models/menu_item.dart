@@ -24,21 +24,23 @@ class MenuItem {
   });
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
-    return MenuItem(
-      id: json['_id'] ?? json['id'] ?? '',
-      name: json['name'] ?? '',
-      category: json['category'] ?? '',
-      price: (json['price'] is int)
-          ? (json['price'] as int).toDouble()
-          : (json['price'] ?? 0).toDouble(),
-      description: json['description'],
-      image: json['image'],
-      available: json['available'] ?? true,
+  return MenuItem(
+    id: json['_id'] ?? json['id'] ?? '',
+    name: json['name'] ?? '',
+    category: json['category'] ?? '',
+    price: (json['price'] is int)
+        ? (json['price'] as int).toDouble()
+        : (json['price'] ?? 0).toDouble(),
+    description: json['description'],
+    image: json['image'],
+    available: json['available'] ?? true,
 
-      // ✅ ✅ ADDED 🔥 STOCK MAPPING
-      stock: json['stock'] ?? 0,
-    );
-  }
+    // 🔥 SAFER STOCK PARSING
+    stock: (json['stock'] is int)
+        ? json['stock']
+        : int.tryParse(json['stock']?.toString() ?? '0') ?? 0,
+  );
+}
 }
 
 class CartItem {
