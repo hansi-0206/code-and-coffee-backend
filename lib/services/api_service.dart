@@ -175,6 +175,9 @@ class ApiService {
       body: jsonEncode({'stock': stock}),
     );
 
+    print("STATUS CODE: ${response.statusCode}");
+    print("RESPONSE BODY: ${response.body}");
+
     if (response.statusCode == 200) {
       return MenuItem.fromJson(jsonDecode(response.body));
     } else {
