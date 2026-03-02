@@ -55,11 +55,9 @@ const menuItemSchema = new mongoose.Schema(
 );
 
 // 🔥 AUTO-SYNC availability with stock (Bulletproof Fix)
-menuItemSchema.pre('save', function (next) {
+menuItemSchema.pre('save', function () {
   this.available = this.stock > 0;
-  next();
 });
-
 // 🔥 Optimized index for canteen-based menu loading
 menuItemSchema.index({ canteenId: 1, category: 1, available: 1 });
 
