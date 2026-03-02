@@ -138,21 +138,27 @@ class MenuProvider with ChangeNotifier {
 
   Future<void> updateStock(String id, int stock) async {
     try {
+      print("Updating stock for $id to $stock");
+
       final updatedItem = await _apiService.updateStock(id, stock);
 
+      print("Backend returned stock: ${updatedItem.stock}");
+
       final index = _items.indexWhere((item) => item.id == id);
+
+      print("Index found: $index");
 
       if (index != -1) {
         _items[index] = updatedItem;
         notifyListeners();
+        print("Stock updated locally");
       }
     } catch (e) {
+      print("Stock update error: $e");
       _error = e.toString();
       notifyListeners();
-      rethrow;
-    }
   }
-
+}
   List<MenuItem> getItemsByCategory(String category) {
     return _items.where((item) => item.category == category).toList();
   }
