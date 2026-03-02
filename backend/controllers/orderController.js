@@ -26,35 +26,41 @@ exports.createOrder = async (req, res) => {
     if (!total || total <= 0) {
       return res.status(400).json({ message: 'Invalid order total' });
     }
-    if (!menuItemId) {
-      return res.status(400).json({ message: 'Invalid menu item' });
-    }
-
+    
     // ✅ NEW: STOCK VALIDATION + ATOMIC DECREMENT
-    for (const item of items) {
+    // ✅ STOCK VALIDATION + ATOMIC DECREMENT
+for (const item of items) {
 
-      const menuItemId = item.menuItem || item.menuItemId;
+  console.log("Incoming item:", item);
 
-      const result = await MenuItem.updateOne(
-        { _id: menuItemId, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } }
-      );
+  const menuItemId = item.menuItem || item.menuItemId;
+  const quantity = Number(item.quantity) || 1;
 
-      if (result.modifiedCount === 0) {
-        return res.status(400).json({
-          message: `${item.name} just went out of stock`
-        });
-      }
+  console.log("Updating menuItemId:", menuItemId);
+  console.log("Quantity:", quantity);
 
-      const updatedItem = await MenuItem.findById(menuItemId);
+  const result = await MenuItem.updateOne(
+    { _id: menuItemId, stock: { $gte: quantity } },
+    { $inc: { stock: -quantity } }
+  );
 
-      if (global.io) {
-        global.io.emit("stockUpdated", {
-          menuItemId,
-          newStock: updatedItem.stock
-        });
-      }
+  console.log("Update result:", result);
+
+  if (result.modifiedCount === 0) {
+    return res.status(400).json({
+      message: `Item out of stock`
+    });
+  }
+
+  const updatedItem = await MenuItem.findById(menuItemId);
+
+  if (global.io) {
+    global.io.emit("stockUpdated", {
+      menuItemId,
+      newStock: updatedItem.stock
+    });
     }
+  }
     // ✅ Order creation (UNCHANGED)
     const order = await Order.create({
       canteenId,
