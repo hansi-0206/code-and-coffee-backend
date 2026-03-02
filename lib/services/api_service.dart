@@ -175,15 +175,17 @@ class ApiService {
       body: jsonEncode({'stock': stock}),
     );
 
-    print("STATUS CODE: ${response.statusCode}");
-    print("RESPONSE BODY: ${response.body}");
+    print("📡 PATCH URL: ${ApiConfig.baseUrl}${ApiConfig.menuItems}/$id/stock");
+    print("📦 BODY: {'stock': $stock}");
+    print("📨 STATUS CODE: ${response.statusCode}");
+    print("📨 RESPONSE: ${response.body}");
 
     if (response.statusCode == 200) {
       return MenuItem.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to update stock');
     }
-  }
+}
 
   /* =========================================================
      ORDERS
