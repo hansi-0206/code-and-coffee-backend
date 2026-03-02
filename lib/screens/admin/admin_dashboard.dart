@@ -297,40 +297,42 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Update Stock"),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration:
-              const InputDecoration(labelText: "Stock Quantity"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text("Update Stock"),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration:
+                const InputDecoration(labelText: "Stock Quantity"),
           ),
-          ElevatedButton(
-            child: const Text("Update"),
-            onPressed: () async {
-              final newStock =
-                  int.tryParse(controller.text) ?? 0;
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              child: const Text("Update"),
+              onPressed: () async {
+                final newStock =
+                    int.tryParse(controller.text) ?? 0;
 
-              if (newStock < 0) return;
+                if (newStock < 0) return;
 
-              await Provider.of<MenuProvider>(
-                context,
-                listen: false,
-              ).updateStock(item.id, newStock);
+                print("🔥 Calling updateStock API");
 
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
+                await context
+                    .read<MenuProvider>()
+                    .updateStock(item.id, newStock);
+
+                Navigator.pop(dialogContext);
+              },
+            ),
+          ],
+        );
+      },
     );
-  }
-
+}
   Widget _ordersSection(List<Order> orders) {
     if (orders.isEmpty) {
       return const Center(
