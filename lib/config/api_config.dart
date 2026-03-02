@@ -1,5 +1,5 @@
 class ApiConfig {
-  static const String baseUrl = 'https://code-and-coffee-backend.onrender.com/api';
+  static const String baseUrl ="https://code-and-coffee-backend.onrender.com/api";
 
   // ================= AUTH =================
   static const String login = '/auth/login';

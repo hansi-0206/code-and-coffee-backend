@@ -39,7 +39,7 @@ exports.getMenuItems = async (req, res) => {
 // ================================
 exports.createMenuItem = async (req, res) => {
   try {
-    const { canteenId, name, category, price, description, image } = req.body;
+    const { canteenId, name, category, price, description, image, stock } = req.body;
 
     if (!canteenId || !name || !category || !price) {
       return res.status(400).json({
@@ -64,6 +64,8 @@ exports.createMenuItem = async (req, res) => {
       price,
       description,
       image,
+      stock: stock || 0,
+      available: stock > 0,
     });
 
     res.status(201).json(menuItem);
@@ -85,20 +87,64 @@ exports.updateMenuItem = async (req, res) => {
       return res.status(400).json({ message: 'Invalid category' });
     }
 
-    const menuItem = await MenuItem.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const menuItem = await MenuItem.findById(req.params.id);
 
     if (!menuItem) {
       return res.status(404).json({ message: 'Menu item not found' });
     }
 
+    Object.assign(menuItem, req.body);
+
+    // 🔥 Sync availability with stock
+    if (req.body.stock !== undefined) {
+      menuItem.available = req.body.stock > 0;
+    }
+
+    await menuItem.save();
+
     res.status(200).json(menuItem);
   } catch (error) {
     console.error('Update menu error:', error.message);
     res.status(500).json({ message: 'Failed to update menu item' });
+  }
+};
+
+// ================================
+// UPDATE STOCK (ADMIN ONLY)
+// PATCH /api/menu/:id/stock
+// ================================
+exports.updateStock = async (req, res) => {
+  try {
+    const { stock } = req.body;
+
+    if (stock === undefined || stock < 0) {
+      return res.status(400).json({ message: 'Invalid stock value' });
+    }
+
+    const menuItem = await MenuItem.findById(req.params.id);
+
+    if (!menuItem) {
+      return res.status(404).json({ message: 'Menu item not found' });
+    }
+
+    menuItem.stock = stock;
+    menuItem.available = stock > 0;
+
+    await menuItem.save();
+
+    // 🔥 REALTIME SOCKET EMIT (IMPORTANT FIX)
+    if (global.io) {
+      global.io.emit("stockUpdated", {
+        menuItemId: menuItem._id.toString(),  // ✅ convert to string
+        newStock: menuItem.stock
+      });
+    }
+
+    res.status(200).json(menuItem);
+
+  } catch (error) {
+    console.error('Stock update error:', error.message);
+    res.status(500).json({ message: 'Failed to update stock' });
   }
 };
 

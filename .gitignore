@@ -1,3 +1,15 @@
 .env
 node_modules/
 
+# Flutter
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.idea/
+.vscode/
+android/.gradle/
+ios/Pods/
