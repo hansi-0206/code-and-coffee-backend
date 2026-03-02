@@ -115,9 +115,11 @@ exports.updateMenuItem = async (req, res) => {
 // ================================
 exports.updateStock = async (req, res) => {
   try {
-    const { stock } = req.body;
+    let { stock } = req.body;
 
-    if (stock === undefined || stock < 0) {
+    stock = Number(stock);
+
+    if (isNaN(stock) || stock < 0) {
       return res.status(400).json({ message: 'Invalid stock value' });
     }
 
@@ -128,11 +130,8 @@ exports.updateStock = async (req, res) => {
     }
 
     menuItem.stock = stock;
-    menuItem.available = stock > 0;
-
     await menuItem.save();
 
-    // 🔥 REALTIME EMIT (FIXED)
     if (global.io) {
       global.io.emit("stockUpdated", {
         menuItemId: menuItem._id,
@@ -140,14 +139,13 @@ exports.updateStock = async (req, res) => {
       });
     }
 
-    res.status(200).json(menuItem);
+    return res.status(200).json(menuItem);
 
   } catch (error) {
-    console.error('Stock update error:', error.message);
-    res.status(500).json({ message: 'Failed to update stock' });
+    console.error('Stock update error:', error);
+    return res.status(500).json({ message: 'Failed to update stock' });
   }
 };
-
 // ================================
 // DELETE MENU ITEM (ADMIN ONLY)
 // DELETE /api/menu/:id
