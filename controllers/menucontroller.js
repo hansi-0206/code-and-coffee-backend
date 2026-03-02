@@ -115,6 +115,11 @@ exports.updateMenuItem = async (req, res) => {
 // ================================
 exports.updateStock = async (req, res) => {
   try {
+    console.log("🔥 STOCK UPDATE ROUTE HIT");
+    console.log("ID:", req.params.id);
+    console.log("Body:", req.body);
+    console.log("User:", req.user);
+
     const { stock } = req.body;
 
     if (stock === undefined || stock < 0) {
@@ -132,10 +137,11 @@ exports.updateStock = async (req, res) => {
 
     await menuItem.save();
 
-    // 🔥 REALTIME SOCKET EMIT (IMPORTANT FIX)
+    console.log("✅ STOCK UPDATED IN DB");
+
     if (global.io) {
       global.io.emit("stockUpdated", {
-        menuItemId: menuItem._id.toString(),  // ✅ convert to string
+        menuItemId: menuItem._id.toString(),
         newStock: menuItem.stock
       });
     }
@@ -143,7 +149,7 @@ exports.updateStock = async (req, res) => {
     res.status(200).json(menuItem);
 
   } catch (error) {
-    console.error('Stock update error:', error.message);
+    console.error('❌ Stock update error:', error);
     res.status(500).json({ message: 'Failed to update stock' });
   }
 };
