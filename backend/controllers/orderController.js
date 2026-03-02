@@ -31,20 +31,17 @@ exports.createOrder = async (req, res) => {
     // ✅ STOCK VALIDATION + ATOMIC DECREMENT
 for (const item of items) {
 
-  console.log("Incoming item:", item);
-
   const menuItemId = item.menuItem || item.menuItemId;
-  const quantity = Number(item.quantity) || 1;
+  const quantity = Number(item.quantity);
 
-  console.log("Updating menuItemId:", menuItemId);
-  console.log("Quantity:", quantity);
+  if (!menuItemId || !quantity || quantity <= 0) {
+    return res.status(400).json({ message: 'Invalid item quantity' });
+  }
 
   const result = await MenuItem.updateOne(
     { _id: menuItemId, stock: { $gte: quantity } },
     { $inc: { stock: -quantity } }
   );
-
-  console.log("Update result:", result);
 
   if (result.modifiedCount === 0) {
     return res.status(400).json({
