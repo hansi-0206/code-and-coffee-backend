@@ -26,32 +26,35 @@ exports.createOrder = async (req, res) => {
     if (!total || total <= 0) {
       return res.status(400).json({ message: 'Invalid order total' });
     }
+    if (!menuItemId) {
+      return res.status(400).json({ message: 'Invalid menu item' });
+    }
 
     // ✅ NEW: STOCK VALIDATION + ATOMIC DECREMENT
     for (const item of items) {
 
+      const menuItemId = item.menuItem || item.menuItemId;
+
       const result = await MenuItem.updateOne(
-        { _id: item.menuItemId, stock: { $gt: 0 } },  // Only if stock > 0
-        { $inc: { stock: -item.quantity } }           // Decrease stock
+        { _id: menuItemId, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } }
       );
 
-      // 🔥 If stock not available → STOP ORDER
       if (result.modifiedCount === 0) {
         return res.status(400).json({
           message: `${item.name} just went out of stock`
         });
       }
 
-      // ✅ NEW: Fetch updated stock
-      const updatedItem = await MenuItem.findById(item.menuItemId);
+      const updatedItem = await MenuItem.findById(menuItemId);
 
-      // ✅ NEW: REALTIME STOCK UPDATE
-      io.emit("stockUpdated", {
-        menuItemId: item.menuItemId,
-        newStock: updatedItem.stock
-      });
+      if (global.io) {
+        global.io.emit("stockUpdated", {
+          menuItemId,
+          newStock: updatedItem.stock
+        });
+      }
     }
-
     // ✅ Order creation (UNCHANGED)
     const order = await Order.create({
       canteenId,
