@@ -8,7 +8,7 @@ import '../../providers/order_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/canteen_provider.dart';
 import '../../services/api_service.dart';
-import 'order_tracking_screen.dart';
+import 'student_dashboard.dart';
 
 enum PaymentMethod { upi, cod }
 
@@ -334,13 +334,12 @@ class _CartScreenState extends State<CartScreen> {
 
                                     if (context.mounted) {
                                       Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const OrderTrackingScreen(),
-                                        ),
-                                        (route) => false,
-                                      );
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const StudentDashboard(),
+                                      ),
+                                      (route) => false,
+                                       );
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
