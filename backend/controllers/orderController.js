@@ -7,18 +7,11 @@ const MenuItem = require('../models/MenuItem');
 // ================================
 exports.createOrder = async (req, res) => {
   try {
-    const {
-      canteenId,
-      userId,
-      userName,
-      items,
-      subtotal,
-      tax,
-      total,
-      paymentMode,
-    } = req.body;
+    const { canteenId, items, subtotal, tax, total, paymentMode } = req.body;
 
-    // 🔥 BLOCK EMPTY ORDERS (CRITICAL FIX)
+    const userId = req.user.id;
+    const userName = req.user.name;
+
     if (!items || items.length === 0) {
       return res.status(400).json({ message: 'Cart is empty' });
     }
@@ -26,55 +19,62 @@ exports.createOrder = async (req, res) => {
     if (!total || total <= 0) {
       return res.status(400).json({ message: 'Invalid order total' });
     }
-    
-    // ✅ NEW: STOCK VALIDATION + ATOMIC DECREMENT
-    // ✅ STOCK VALIDATION + ATOMIC DECREMENT
-for (const item of items) {
 
-  const menuItemId = item.menuItem || item.menuItemId;
-  const quantity = Number(item.quantity);
+    const orderItems = [];
 
-  if (!menuItemId || !quantity || quantity <= 0) {
-    return res.status(400).json({ message: 'Invalid item quantity' });
-  }
+    for (const item of items) {
 
-  const result = await MenuItem.updateOne(
-    { _id: menuItemId, stock: { $gte: quantity } },
-    { $inc: { stock: -quantity } }
-  );
+      const menuItemId = item.menuItem;
+      const quantity = Number(item.quantity);
 
-  if (result.modifiedCount === 0) {
-    return res.status(400).json({
-      message: `Item out of stock`
-    });
-  }
+      if (!menuItemId || !quantity || quantity <= 0) {
+        return res.status(400).json({ message: 'Invalid item data' });
+      }
 
-  const updatedItem = await MenuItem.findById(menuItemId);
+      const updatedItem = await MenuItem.findOneAndUpdate(
+        { _id: menuItemId, stock: { $gte: quantity } },
+        { $inc: { stock: -quantity } },
+        { new: true }
+      );
 
-  if (global.io) {
-    global.io.emit("stockUpdated", {
-      menuItemId,
-      newStock: updatedItem.stock
-    });
+      if (!updatedItem) {
+        return res.status(400).json({
+          message: 'Item out of stock'
+        });
+      }
+
+      // 🔥 Build full order item from DB
+      orderItems.push({
+        menuItem: updatedItem._id,
+        name: updatedItem.name,
+        price: updatedItem.price,
+        quantity
+      });
+
+      if (global.io) {
+        global.io.emit("stockUpdated", {
+          menuItemId,
+          newStock: updatedItem.stock
+        });
+      }
     }
-  }
-    // ✅ Order creation (UNCHANGED)
+
     const order = await Order.create({
       canteenId,
       userId,
       userName,
-      items,
+      items: orderItems,  // 🔥 use backend-built items
       subtotal,
       tax,
       total,
       paymentMode,
     });
 
-    res.status(201).json(order);
+    return res.status(201).json(order);
 
   } catch (error) {
-    console.error('Create order error:', error.message);
-    res.status(500).json({ message: 'Failed to create order' });
+    console.error('Create order error:', error);
+    return res.status(500).json({ message: 'Failed to create order' });
   }
 };
 
@@ -87,9 +87,10 @@ exports.getUserOrders = async (req, res) => {
     const orders = await Order.find({ userId: req.user.id })
       .sort({ createdAt: -1 });
 
-    res.status(200).json(orders);
+    return res.status(200).json(orders);
+
   } catch (error) {
-    console.error('Fetch user orders error:', error.message);
-    res.status(500).json({ message: 'Failed to fetch orders' });
+    console.error('Fetch user orders error:', error);
+    return res.status(500).json({ message: 'Failed to fetch orders' });
   }
 };
