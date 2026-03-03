@@ -191,11 +191,19 @@ class ApiService {
      ORDERS
   ========================================================= */
   Future<Order> createOrder(Map<String, dynamic> data) async {
+    final url = '${ApiConfig.baseUrl}${ApiConfig.orders}';
+
+    print("🚀 CALLING ORDER API: $url");
+    print("📦 ORDER BODY: ${jsonEncode(data)}");
+
     final response = await http.post(
-      Uri.parse('${ApiConfig.baseUrl}${ApiConfig.orders}'),
+      Uri.parse(url),
       headers: await _headers(),
       body: jsonEncode(data),
     );
+
+    print("📨 STATUS CODE: ${response.statusCode}");
+    print("📨 RESPONSE BODY: ${response.body}");
 
     if (response.statusCode == 201) {
       final decoded = jsonDecode(response.body);

@@ -6,6 +6,7 @@ const MenuItem = require('../models/MenuItem');
 // POST /api/orders
 // ================================
 exports.createOrder = async (req, res) => {
+  console.log("🔥 ORDER CONTROLLER HIT");
   try {
     const { canteenId, items, subtotal, tax, total, paymentMode } = req.body;
 
